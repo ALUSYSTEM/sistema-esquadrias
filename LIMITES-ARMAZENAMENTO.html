@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limites de Armazenamento - Sistema ALUBRAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h2>💾 Limites de Armazenamento - Sistema ALUBRAS</h2>
+                
+                <div class="alert alert-info">
+                    <h5>📊 Análise de Capacidade</h5>
+                    <p>Seu sistema possui <strong>dupla proteção</strong> contra perda de dados!</p>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-light">
+                                <h5>💾 LocalStorage (Navegador)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="stats-local"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5>🔥 Firebase (Nuvem)</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="stats-firebase"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        <h5>🛡️ Proteções Contra Perda de Dados</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>✅ Proteções Locais:</h6>
+                                <ul>
+                                    <li>Salvamento automático em localStorage</li>
+                                    <li>Backup antes de cada operação</li>
+                                    <li>Validação de dados antes de salvar</li>
+                                    <li>Recuperação em caso de falha</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>✅ Proteções na Nuvem:</h6>
+                                <ul>
+                                    <li>Firebase com redundância automática</li>
+                                    <li>Múltiplos servidores Google</li>
+                                    <li>Backup automático diário</li>
+                                    <li>Sincronização em tempo real</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>📈 Capacidade Estimada</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="capacidade-estimada"></div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning">
+                    <h6>⚠️ Quando Você Pode Perder Dados:</h6>
+                    <ul>
+                        <li><strong>Raramente:</strong> Limpeza completa do navegador + logout do Firebase</li>
+                        <li><strong>Solução:</strong> Sistema sempre mantém backup local mesmo offline</li>
+                        <li><strong>Prevenção:</strong> Fazer login periodicamente para sincronizar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="testar-limites.js"></script>
+    <script>
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getStorageSize() {
+            let total = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    total += localStorage[key].length + key.length;
+                }
+            }
+            return total;
+        }
+
+        function countRecords() {
+            const prefix = 'sistema_esquadrias_';
+            const tipos = ['obras', 'esquadrias', 'materiais', 'manutencoes', 'entregas'];
+            let total = 0;
+            
+            tipos.forEach(tipo => {
+                const data = localStorage.getItem(prefix + tipo);
+                if (data) {
+                    total += JSON.parse(data).length;
+                }
+            });
+            
+            return total;
+        }
+
+        function updateStats() {
+            const tamanhoAtual = getStorageSize();
+            const registrosAtuais = countRecords();
+            
+            // LocalStorage stats
+            document.getElementById('stats-local').innerHTML = `
+                <p><strong>Espaço usado:</strong> ${formatBytes(tamanhoAtual)}</p>
+                <p><strong>Limite total:</strong> ~5-10MB</p>
+                <p><strong>Registros atuais:</strong> ${registrosAtuais}</p>
+                <p><strong>Espaço restante:</strong> ${formatBytes(10 * 1024 * 1024 - tamanhoAtual)}</p>
+            `;
+
+            // Firebase stats
+            document.getElementById('stats-firebase').innerHTML = `
+                <p><strong>Limite gratuito:</strong> 1GB + 50k leituras/dia</p>
+                <p><strong>Capacidade:</strong> Milhões de registros</p>
+                <p><strong>Backup:</strong> Automático</p>
+                <p><strong>Status:</strong> ${window.firebase ? '✅ Conectado' : '⚠️ Offline'}</p>
+            `;
+
+            // Capacidade estimada
+            const tamanhoRegistro = 500; // bytes médio
+            const limiteMB = 5;
+            const registrosPossiveis = Math.floor((limiteMB * 1024 * 1024) / tamanhoRegistro);
+            
+            document.getElementById('capacidade-estimada').innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6>📊 Capacidade Total:</h6>
+                        <p><strong>~${registrosPossiveis.toLocaleString()} registros</strong></p>
+                        <small class="text-muted">Considerando 5MB de limite</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>📝 Registros Atuais:</h6>
+                        <p><strong>${registrosAtuais} itens</strong></p>
+                        <small class="text-muted">Você usou: ${((registrosAtuais / registrosPossiveis) * 100).toFixed(2)}%</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h6>🔢 Restante:</h6>
+                        <p><strong>~${(registrosPossiveis - registrosAtuais).toLocaleString()} registros</strong></p>
+                        <small class="text-muted">Espaço para mais dados</small>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', updateStats);
+    </script>
+</body>
+</html>

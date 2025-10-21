@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Dados Salvos - ALUBRAS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-12">
+                <h2>📊 Verificar Dados Salvos</h2>
+                
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>💾 Dados Locais (LocalStorage)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="dados-locais"></div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>🔥 Firebase Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="firebase-status"></div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info">
+                    <h6>📋 Como seus dados são salvos:</h6>
+                    <ul>
+                        <li><strong>Firebase:</strong> Salva na nuvem (permanente)</li>
+                        <li><strong>LocalStorage:</strong> Salva no navegador (backup local)</li>
+                        <li><strong>Sistema:</strong> Tenta Firebase primeiro, depois LocalStorage</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verificar dados locais
+        function verificarDadosLocais() {
+            const prefix = 'sistema_esquadrias_';
+            const tipos = ['obras', 'esquadrias', 'materiais', 'manutencoes', 'entregas'];
+            
+            let html = '';
+            let totalRegistros = 0;
+            
+            tipos.forEach(tipo => {
+                const dados = localStorage.getItem(prefix + tipo);
+                const array = dados ? JSON.parse(dados) : [];
+                totalRegistros += array.length;
+                
+                html += `
+                    <div class="mb-3">
+                        <strong>${tipo.toUpperCase()}:</strong> ${array.length} registros
+                        ${array.length > 0 ? `<button class="btn btn-sm btn-outline-primary ms-2" onclick="verDetalhes('${tipo}')">Ver</button>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += `<hr><strong>TOTAL:</strong> ${totalRegistros} registros salvos localmente`;
+            
+            document.getElementById('dados-locais').innerHTML = html;
+        }
+
+        // Verificar status Firebase
+        function verificarFirebase() {
+            const statusDiv = document.getElementById('firebase-status');
+            
+            if (window.firebase) {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-success">
+                        <strong>✅ Firebase Conectado!</strong><br>
+                        Seus dados estão sendo salvos na nuvem.
+                    </div>
+                `;
+            } else {
+                statusDiv.innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>⚠️ Firebase Não Conectado</strong><br>
+                        Usando sistema local como backup.
+                    </div>
+                `;
+            }
+        }
+
+        // Ver detalhes dos dados
+        function verDetalhes(tipo) {
+            const prefix = 'sistema_esquadrias_';
+            const dados = localStorage.getItem(prefix + tipo);
+            const array = dados ? JSON.parse(dados) : [];
+            
+            alert(`${tipo.toUpperCase()}:\n\n${JSON.stringify(array, null, 2)}`);
+        }
+
+        // Executar verificações
+        document.addEventListener('DOMContentLoaded', () => {
+            verificarDadosLocais();
+            verificarFirebase();
+        });
+    </script>
+</body>
+</html>

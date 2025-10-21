@@ -1,0 +1,26 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "**/__pycache__/**",
+      "*.py",
+      "requirements.txt",
+      "*.bat",
+      "*.md",
+      "build/**",
+      "dist/**",
+      "logs/**",
+      "testar_sistema.py",
+      "compartilhar_sistema.py"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

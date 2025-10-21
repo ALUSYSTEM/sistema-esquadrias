@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Esquadrias - ALUBRAS</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- CSS Customizado -->
+    <link href="css/style.css" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script type="module" src="firebase-config.js"></script>
+    <!-- Sistema Local como fallback -->
+    <script src="js/local-storage.js"></script>
+    <script>
+        // Fallback para quando Firebase não estiver configurado
+        setTimeout(() => {
+            if (!window.firebase) {
+                console.warn('Firebase não configurado. Configure as credenciais em firebase-config.js');
+                // Não mostrar mensagem se o sistema local estiver disponível
+                if (window.localStorageManager) {
+                    console.log('Usando sistema local como fallback');
+                } else {
+                    document.getElementById('main-content').innerHTML = `
+                        <div class="container mt-5">
+                            <div class="alert alert-info">
+                                <h4><i class="fas fa-info-circle"></i> Sistema em Modo Local</h4>
+                                <p>Firebase não configurado. Usando sistema local com dados salvos no navegador.</p>
+                                <p><strong>Usuário padrão:</strong> admin@sistema.com / admin123</p>
+                                <div class="mt-3">
+                                    <button class="btn btn-primary" onclick="location.reload()">Usar Sistema Local</button>
+                                    <a href="CONFIGURAR-FIREBASE.md" class="btn btn-outline-secondary ms-2" target="_blank">Configurar Firebase</a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }, 3000);
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <strong>ALUBRAS</strong>
+                <small class="d-block" style="font-size: 0.7em;">esquadrias de alumínio</small>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-page="dashboard">
+                            <i class="fas fa-tachometer-alt"></i> Início
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Ferramentas
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-page="obras">Obras</a></li>
+                            <li><a class="dropdown-item" href="#" data-page="esquadrias">Esquadrias</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="materiais">
+                            <i class="fas fa-boxes"></i> Estoque
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="manutencao">
+                            <i class="fas fa-tools"></i> Manutenção
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-page="entregas">
+                            <i class="fas fa-truck"></i> Entregas
+                        </a>
+                    </li>
+                </ul>
+                
+                <div class="navbar-nav">
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user"></i> <span id="user-email">admin</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="logout()">Sair</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Container Principal -->
+    <div class="container-fluid mt-3">
+        <!-- Mensagens de Feedback -->
+        <div id="alert-container"></div>
+        
+        <!-- Conteúdo das Páginas -->
+        <div id="main-content">
+            <!-- Login -->
+            <div id="login-page" class="auth-page" style="display: block;">
+                <div class="row justify-content-center">
+                    <div class="col-md-4">
+                        <div class="card shadow">
+                            <div class="card-body p-5">
+                                <div class="text-center mb-4">
+                                    <h3 class="text-primary"><strong>ALUBRAS</strong></h3>
+                                    <p class="text-muted">Sistema de Esquadrias</p>
+                                </div>
+                                
+                                <form id="login-form">
+                                    <div class="mb-3">
+                                        <label for="email" class="form-label">E-mail</label>
+                                        <input type="email" class="form-control" id="email" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="password" class="form-label">Senha</label>
+                                        <input type="password" class="form-control" id="password" required>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-sign-in-alt"></i> Entrar
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard -->
+            <div id="dashboard-page" class="page-content" style="display: none;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                    <div class="text-muted">
+                        <i class="fas fa-clock"></i> <span id="current-time"></span>
+                    </div>
+                </div>
+
+                <!-- Cards de Estatísticas -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="total-obras">0</h4>
+                                        <p class="mb-0">Obras</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-building fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="total-esquadrias">0</h4>
+                                        <p class="mb-0">Esquadrias</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-window-maximize fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="total-materiais">0</h4>
+                                        <p class="mb-0">Materiais</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-boxes fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h4 id="alertas-estoque">0</h4>
+                                        <p class="mb-0">Alertas</p>
+                                    </div>
+                                    <div class="align-self-center">
+                                        <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas de Estoque -->
+                <div id="alertas-container" class="mb-4"></div>
+
+                <!-- Atividades Recentes -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-history"></i> Obras Recentes</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="obras-recentes"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="fas fa-exchange-alt"></i> Movimentações Recentes</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="movimentacoes-recentes"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Outras páginas serão carregadas dinamicamente -->
+            <div id="obras-page" class="page-content" style="display: none;"></div>
+            <div id="esquadrias-page" class="page-content" style="display: none;"></div>
+            <div id="materiais-page" class="page-content" style="display: none;"></div>
+            <div id="manutencao-page" class="page-content" style="display: none;"></div>
+            <div id="entregas-page" class="page-content" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Modais -->
+    <div id="modal-container"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
